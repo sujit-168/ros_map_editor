@@ -16,6 +16,13 @@ A GUI tool for editing ROS map files in PGM format. This tool allows you to view
 - Minimap for navigation in large maps
 - Automatically saves changes on exit
 
+## TODO
+
+- [x] BOX Select
+- [x] Line Select
+- [ ] Polygon Select
+- [ ] Rapidly Loading and Editing
+
 ## Installation
 
 ### From PyPI
