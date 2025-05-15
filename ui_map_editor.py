@@ -149,6 +149,15 @@ class Ui_MapEditor(object):
         self.saveButton.setObjectName("saveButton")
         self.horizontalLayout.addWidget(self.saveButton)
 
+        self.focusButton = QtWidgets.QPushButton(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.focusButton.sizePolicy().hasHeightForWidth())
+        self.focusButton.setSizePolicy(sizePolicy)
+        self.focusButton.setObjectName("focusButton")
+        self.horizontalLayout.addWidget(self.focusButton)
+
         self.verticalLayout.addLayout(self.horizontalLayout)
 
         # menu bar
@@ -171,7 +180,7 @@ class Ui_MapEditor(object):
         MapEditor.setWindowTitle(_translate("MapEditor", "MainWindow"))
         self.label.setText(_translate("MapEditor", "Zoom"))
         self.closeButton.setText(_translate("MapEditor", "Close"))
-        
+        self.focusButton.setText(_translate("MapEditor", "Center Focus"))
         self.saveButton.setText(_translate("MapEditor", "Save"))
         self.label_3.setText(_translate("MapEditor", "File"))
         self.label_4.setText(_translate("MapEditor", "Width"))

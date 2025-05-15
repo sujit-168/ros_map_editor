@@ -14,6 +14,7 @@ import os
 
 class MapEditor(QtWidgets.QMainWindow):
     def __init__(self, fn):
+        """Initialize the map editor with the given map file"""
         super(MapEditor, self).__init__()
 
         # two approaches to integrating tool generated ui file shown below
@@ -50,7 +51,9 @@ class MapEditor(QtWidgets.QMainWindow):
         self.pixels_per_cell = self.min_multiplier * self.zoom 
 
         self.draw_map()
-        
+
+        self.ui.focusButton.clicked.connect(self.centerView)
+
         self.ui.closeButton.clicked.connect(self.closeEvent)
         self.ui.saveButton.clicked.connect(self.saveEvent)
 
@@ -62,6 +65,7 @@ class MapEditor(QtWidgets.QMainWindow):
 
 
     def eventFilter(self, source, event):
+        """Handle mouse drag events for continuous cell coloring"""
         if event.type() == QtCore.QEvent.MouseMove and source is self.ui.graphicsView.viewport() and self.color != 'alternate' and event.buttons() == QtCore.Qt.LeftButton:
             pos = event.pos()
             x = pos.x() + self.ui.graphicsView.horizontalScrollBar().value()
@@ -86,10 +90,12 @@ class MapEditor(QtWidgets.QMainWindow):
 
 
     def paintEvent(self, e):
+        """Handle paint events by updating the scroll position"""
         self.scrollChanged(0)
 
 
     def scrollChanged(self, val):
+        """Update the minimap view when scrolling the main view"""
         
         if self.scene.width() and self.scene.height():
             x = int(self.ui.graphicsView.horizontalScrollBar().value() /  self.scene.width() * self.im.size[0])
@@ -100,7 +106,7 @@ class MapEditor(QtWidgets.QMainWindow):
 
 
     def drawBox(self, x=5, y=5, width=50, height=50):
-
+        """Draw a red rectangle on the minimap to show current view position"""
         im = self.im.convert("RGBA")
         data = im.tobytes("raw","RGBA")
         qim = QtGui.QImage(data, im.size[0], im.size[1], QtGui.QImage.Format_ARGB32)
@@ -118,15 +124,18 @@ class MapEditor(QtWidgets.QMainWindow):
         self.ui.label_2.show()
 
     def handleColor(self, index):
+        """Set the current drawing color based on selection"""
         self.color = self.ui.colorBox.currentText()
 
     def handleZoom(self, index):
+        """Update zoom level and redraw the map"""
         self.zoom = self.ui.zoomBox.currentData()
         self.pixels_per_cell = self.min_multiplier * self.zoom 
         self.draw_map()
         
 
     def read(self, fn):
+        """Load and parse map file (.pgm) and its corresponding YAML configuration"""
         # try to open as fn or fn.pgm
         try:
             self.im = Image.open(fn)
@@ -160,7 +169,7 @@ class MapEditor(QtWidgets.QMainWindow):
         fn_yaml = os.path.splitext(fn)[0] + '.yaml'
         try:
             stream = open(fn_yaml, "r")
-            docs = yaml.load_all(stream)
+            docs = yaml.load_all(stream, Loader=yaml.FullLoader)
             for doc in docs:
                 self.occupied_thresh = doc['occupied_thresh']  # probability its occupied
                 self.free_thresh = doc['free_thresh']  # probability its uncertain or occupied
@@ -173,6 +182,7 @@ class MapEditor(QtWidgets.QMainWindow):
 
 
     def mapClick(self, event):
+        """Handle mouse clicks on the map to change cell states"""
         # get current model value
         x = math.floor(event.scenePos().x() / self.pixels_per_cell)
         y = math.floor(event.scenePos().y() / self.pixels_per_cell)
@@ -262,6 +272,28 @@ class MapEditor(QtWidgets.QMainWindow):
                 self.scene.addLine(x, 0, x, pixel_height, pen)
             for y in range(0, pixel_height, self.pixels_per_cell):
                 self.scene.addLine(0, y, pixel_width, y, pen)
+
+    def centerView(self):
+        """center the main view to the thumbnail position"""
+        if hasattr(self, 'im'):
+            # calculate the center position
+            center_x = self.im.size[0] // 2 
+            center_y = self.im.size[1] // 2
+            
+            # convert to scene coordinates
+            scene_x = center_x * self.scene.width() / self.im.size[0] - self.im.size[0]
+            scene_y = center_y * self.scene.height() / self.im.size[1] - self.im.size[1]
+            
+            # adjust the scrollbar position
+            self.ui.graphicsView.horizontalScrollBar().setValue(int(scene_x))
+            self.ui.graphicsView.verticalScrollBar().setValue(int(scene_y))
+
+            # print(f"self.im.size[0]", self.im.size[0])
+            # print(f"self.im.size[1]", self.im.size[1])
+            # print(f"self.scene.width()", self.scene.width())
+            # print(f"self.scene.height()", self.scene.height())
+            # print(f"scene_x", scene_x)
+            # print(f"scene_y", scene_y)
 
     def closeEvent(self, event):
         self.close()
