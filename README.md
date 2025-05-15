@@ -2,11 +2,11 @@
 
 A GUI tool for editing ROS map files in PGM format. This tool allows you to view and modify occupancy grid maps used in ROS (Robot Operating System) navigation.
 
+![](./images/ui_advanced.PNG)
+
 ## Acknowledgements
 
 - [https://github.com/TheOnceAndFutureSmalltalker/ros_map_editor](https://github.com/TheOnceAndFutureSmalltalker/ros_map_editor)
-
-![ROS Map Editor](images/usage.gif)
 
 ## Features
 
@@ -19,7 +19,13 @@ A GUI tool for editing ROS map files in PGM format. This tool allows you to view
 ## TODO
 
 - [x] BOX Select
+
+![ROS Map Editor](images/usage.gif)
+
 - [x] Line Select
+
+![ROS Map Editor](images/usage_line_select.gif)
+
 - [ ] Polygon Select
 - [ ] Rapidly Loading and Editing
 
