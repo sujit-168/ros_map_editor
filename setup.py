@@ -6,9 +6,9 @@ setup(
     description="A GUI editor for ROS map files in PGM format",
     long_description=open("README.md").read() if hasattr(__file__, "read") else "",
     long_description_content_type="text/markdown",
-    author="Tianbot",
-    author_email="info@tianbot.com",
-    url="https://github.com/tianbot/ros-map-editor",
+    author="sujit-168",
+    author_email="sujie@tianbot.com",
+    url="https://github.com/sujit-168/ros_map_editor/tree/main",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[

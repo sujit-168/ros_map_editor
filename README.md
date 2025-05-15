@@ -40,8 +40,8 @@ pip install ros-map-editor
 ### From Source
 
 ```bash
-git clone https://github.com/tianbot/ros-map-editor.git
-cd ros-map-editor
+git clone https://github.com/sujit-168/ros_map_editor.git -b main
+cd ros_map_editor
 pip install -e .
 ```
 
@@ -56,7 +56,7 @@ ros-map-editor path/to/your/map
 or simply:
 
 ```bash
-python3 -m ros_map_editor path/to/your/map
+python3 ros_map_editor/main.py path/to/your/map
 ```
 
 The tool will automatically look for the corresponding YAML file (map.yaml) in the same directory.
