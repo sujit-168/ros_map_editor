@@ -158,6 +158,16 @@ class Ui_MapEditor(object):
         self.focusButton.setObjectName("focusButton")
         self.horizontalLayout.addWidget(self.focusButton)
 
+        # add checkbox for selection mode
+        self.boxSelectCheck = QtWidgets.QCheckBox("selection mode")
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.boxSelectCheck.sizePolicy().hasHeightForWidth())
+        self.boxSelectCheck.setSizePolicy(sizePolicy)
+        self.boxSelectCheck.setObjectName("mode select")
+        self.horizontalLayout.addWidget(self.boxSelectCheck)
+
         self.verticalLayout.addLayout(self.horizontalLayout)
 
         # menu bar

@@ -42,6 +42,10 @@ class MapEditor(QtWidgets.QMainWindow):
         self.ui.colorBox.currentIndexChanged.connect(self.handleColor)
         self.color = 'alternate'
 
+        self.box_selecting = False
+        self.start_pos = None
+        self.end_pos = None
+
         self.read(fn)
 
         view_width = self.frameGeometry().width()
@@ -51,7 +55,8 @@ class MapEditor(QtWidgets.QMainWindow):
         self.pixels_per_cell = self.min_multiplier * self.zoom 
 
         self.draw_map()
-
+        
+        self.ui.boxSelectCheck.stateChanged.connect(self.toggleBoxSelect)
         self.ui.focusButton.clicked.connect(self.centerView)
 
         self.ui.closeButton.clicked.connect(self.closeEvent)
@@ -65,29 +70,37 @@ class MapEditor(QtWidgets.QMainWindow):
 
 
     def eventFilter(self, source, event):
-        """Handle mouse drag events for continuous cell coloring"""
-        if event.type() == QtCore.QEvent.MouseMove and source is self.ui.graphicsView.viewport() and self.color != 'alternate' and event.buttons() == QtCore.Qt.LeftButton:
+        """handle mouse interactions including box selection mode"""
+        # mouse movement event handling
+        if event.type() == QtCore.QEvent.MouseMove:
             pos = event.pos()
             x = pos.x() + self.ui.graphicsView.horizontalScrollBar().value()
             y = pos.y() + self.ui.graphicsView.verticalScrollBar().value()
-            x = math.floor(x / self.pixels_per_cell)
-            y = math.floor(y / self.pixels_per_cell)
-            val = self.im.getpixel((x,y))
-
-            if self.color == 'occupied':
-                val = 0
-            elif self.color == 'unoccupied':
-                val = 255
-            elif self.color == 'uncertain':
-                val = 200
-            # update model with new value
-            self.im.putpixel((x,y), val)    
-
-            # redraw cell in new color
-            color = self.value2color(val)
-            self.color_cell(x, y, color)
-        return super(MapEditor, self).eventFilter(source, event)
-
+            cell_x = math.floor(x / self.pixels_per_cell)
+            cell_y = math.floor(y / self.pixels_per_cell)
+            
+            # selection mode processing
+            if self.ui.boxSelectCheck.isChecked() and event.buttons() == QtCore.Qt.LeftButton:
+                if not self.box_selecting:
+                    self.box_selecting = True
+                    self.start_pos = (cell_x, cell_y)
+                self.end_pos = (cell_x, cell_y)
+                self.updateSelectionRect()  # update the selection display
+                return True
+                
+            # normal mode processing
+            elif event.buttons() == QtCore.Qt.LeftButton and self.color != 'alternate':
+                self.fillCell(cell_x, cell_y)
+                return True
+        
+        # mouse release event handling
+        elif event.type() == QtCore.QEvent.MouseButtonRelease and self.box_selecting:
+            self.box_selecting = False
+            self.fillSelectedArea()
+            self.clearSelectionRect()
+            return True
+            
+        return super().eventFilter(source, event)
 
     def paintEvent(self, e):
         """Handle paint events by updating the scroll position"""
@@ -178,12 +191,14 @@ class MapEditor(QtWidgets.QMainWindow):
                 self.origin_y = doc['origin'][1]
         except:
             print("ERROR:  Corresponding YAML file", fn_yaml, "is missing or incorrectly formatted.")
-            sys.exit(1) 
+            sys.exit(1)
 
 
     def mapClick(self, event):
         """Handle mouse clicks on the map to change cell states"""
         # get current model value
+        if self.box_select_mode and event.button() == Qt.LeftButton:  # use the left mouse button in selection mode
+           self.rect_selecting = True
         x = math.floor(event.scenePos().x() / self.pixels_per_cell)
         y = math.floor(event.scenePos().y() / self.pixels_per_cell)
         val = self.im.getpixel((x,y))
@@ -288,12 +303,80 @@ class MapEditor(QtWidgets.QMainWindow):
             self.ui.graphicsView.horizontalScrollBar().setValue(int(scene_x))
             self.ui.graphicsView.verticalScrollBar().setValue(int(scene_y))
 
-            # print(f"self.im.size[0]", self.im.size[0])
-            # print(f"self.im.size[1]", self.im.size[1])
-            # print(f"self.scene.width()", self.scene.width())
-            # print(f"self.scene.height()", self.scene.height())
-            # print(f"scene_x", scene_x)
-            # print(f"scene_y", scene_y)
+    def auto_focus(self):
+        # automatically calculate the best zoom ratio add at the end of the method
+        viewport_width = self.ui.graphicsView.viewport().width()
+        optimal_zoom = max(1, int(viewport_width / self.map_width_cells / self.min_multiplier))
+        
+        # set the closest available zoom level
+        closest_index = 0
+        min_diff = float('inf')
+        for i in range(self.ui.zoomBox.count()):
+            zoom = self.ui.zoomBox.itemData(i)
+            if abs(zoom - optimal_zoom) < min_diff:
+                min_diff = abs(zoom - optimal_zoom)
+                closest_index = i
+        
+        self.ui.zoomBox.setCurrentIndex(closest_index)
+        
+        # auto center view
+        self.centerView()
+    
+    def toggleBoxSelect(self, state):
+        """switch to rectangle selection mode"""
+        self.box_select_mode = (state == Qt.Checked)
+
+    def updateSelectionRect(self):
+        """update the selection rectangle display"""
+        if hasattr(self, 'selection_rect'):
+            self.scene.removeItem(self.selection_rect)
+        
+        min_x = min(self.start_pos[0], self.end_pos[0])
+        max_x = max(self.start_pos[0], self.end_pos[0])
+        min_y = min(self.start_pos[1], self.end_pos[1])
+        max_y = max(self.start_pos[1], self.end_pos[1])
+        
+        rect = QtCore.QRectF(
+            min_x * self.pixels_per_cell,
+            min_y * self.pixels_per_cell,
+            (max_x - min_x + 1) * self.pixels_per_cell,
+            (max_y - min_y + 1) * self.pixels_per_cell
+        )
+        self.selection_rect = self.scene.addRect(rect, QPen(Qt.red, 2), QBrush(Qt.NoBrush))
+
+    def fillSelectedArea(self):
+        """fill all cells in the selected area"""
+        color = self.ui.colorBox.currentText()
+        min_x = min(self.start_pos[0], self.end_pos[0])
+        max_x = max(self.start_pos[0], self.end_pos[0])
+        min_y = min(self.start_pos[1], self.end_pos[1])
+        max_y = max(self.start_pos[1], self.end_pos[1])
+        
+        for x in range(min_x, max_x + 1):
+            for y in range(min_y, max_y + 1):
+                if 0 <= x < self.map_width_cells and 0 <= y < self.map_height_cells:
+                    self.fillCell(x, y)
+
+    def clearSelectionRect(self):
+        """clear selection display"""
+        if hasattr(self, 'selection_rect'):
+            self.scene.removeItem(self.selection_rect)
+            del self.selection_rect
+
+
+    def fillCell(self, x, y):
+        """fill a single cell"""
+        if self.color == 'occupied':
+            val = 0
+        elif self.color == 'unoccupied':
+            val = 255
+        elif self.color == 'uncertain':
+            val = 200
+        else:
+            return
+            
+        self.im.putpixel((x, y), val)
+        self.color_cell(x, y, self.value2color(val))
 
     def closeEvent(self, event):
         self.close()
