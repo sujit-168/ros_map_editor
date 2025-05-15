@@ -168,16 +168,30 @@ class Ui_MapEditor(object):
         self.closeButton.setObjectName("closeButton")
         self.controls_layout_row2.addWidget(self.closeButton)
 
+        self.controls_layout_vertical.addLayout(self.controls_layout_row2)
+
+        self.controls_layout_row3 = QtWidgets.QHBoxLayout()
+        self.controls_layout_row3.setObjectName("controls_layout_row3")
+
+        self.lineSelectCheck = QtWidgets.QCheckBox(self.controls_group)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lineSelectCheck.sizePolicy().hasHeightForWidth())
+        self.lineSelectCheck.setSizePolicy(sizePolicy)
+        self.lineSelectCheck.setObjectName("line mode_select")
+        self.controls_layout_row3.addWidget(self.lineSelectCheck)
+
         self.boxSelectCheck = QtWidgets.QCheckBox(self.controls_group)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.boxSelectCheck.sizePolicy().hasHeightForWidth())
         self.boxSelectCheck.setSizePolicy(sizePolicy)
-        self.boxSelectCheck.setObjectName("mode_select")
-        self.controls_layout_row2.addWidget(self.boxSelectCheck)
+        self.boxSelectCheck.setObjectName("box mode_select")
+        self.controls_layout_row3.addWidget(self.boxSelectCheck)
 
-        self.controls_layout_vertical.addLayout(self.controls_layout_row2)
+        self.controls_layout_vertical.addLayout(self.controls_layout_row3)
 
         self.horizontalLayout_bottom.addWidget(self.controls_group)
         self.verticalLayout.addLayout(self.horizontalLayout_bottom)
@@ -213,7 +227,8 @@ class Ui_MapEditor(object):
         self.focusButton.setText(_translate("MapEditor", "Center"))
         self.saveButton.setText(_translate("MapEditor", "Save"))
         self.closeButton.setText(_translate("MapEditor", "Close"))
-        self.boxSelectCheck.setText(_translate("MapEditor", "Selection Mode"))
+        self.boxSelectCheck.setText(_translate("MapEditor", "Box Selection Mode"))
+        self.lineSelectCheck.setText(_translate("MapEditor", "Line Selection Mode"))
 
 if __name__ == "__main__":
     import sys

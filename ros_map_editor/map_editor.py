@@ -43,6 +43,9 @@ class MapEditor(QtWidgets.QMainWindow):
         self.color = 'alternate'
 
         self.box_selecting = False
+        self.line_selecting = False
+        self.box_select_mode = False
+        self.line_select_mode = False
         self.start_pos = None
         self.end_pos = None
 
@@ -57,6 +60,8 @@ class MapEditor(QtWidgets.QMainWindow):
         self.draw_map()
         
         self.ui.boxSelectCheck.stateChanged.connect(self.toggleBoxSelect)
+        self.ui.lineSelectCheck.stateChanged.connect(self.toggleLineSelect)
+
         self.ui.focusButton.clicked.connect(self.centerView)
 
         self.ui.closeButton.clicked.connect(self.closeEvent)
@@ -79,6 +84,15 @@ class MapEditor(QtWidgets.QMainWindow):
             cell_x = math.floor(x / self.pixels_per_cell)
             cell_y = math.floor(y / self.pixels_per_cell)
             
+            # line selection mode processing
+            if self.ui.lineSelectCheck.isChecked() and event.buttons() == QtCore.Qt.LeftButton:
+                if not self.line_selecting:
+                    self.line_selecting = True
+                    self.start_pos = (cell_x, cell_y)
+                self.end_pos = (cell_x, cell_y)
+                self.updateLinePreview()  # new method real time display of line preview
+                return True
+        
             # selection mode processing
             if self.ui.boxSelectCheck.isChecked() and event.buttons() == QtCore.Qt.LeftButton:
                 if not self.box_selecting:
@@ -93,6 +107,12 @@ class MapEditor(QtWidgets.QMainWindow):
                 self.fillCell(cell_x, cell_y)
                 return True
         
+        elif event.type() == QtCore.QEvent.MouseButtonRelease and self.line_selecting:
+            self.line_selecting = False
+            self.fillLineBetweenPoints()  # add method to fill cells on a straight line
+            self.clearLinePreview()       # clear straight line preview
+            return True
+    
         # mouse release event handling
         elif event.type() == QtCore.QEvent.MouseButtonRelease and self.box_selecting:
             self.box_selecting = False
@@ -197,7 +217,7 @@ class MapEditor(QtWidgets.QMainWindow):
     def mapClick(self, event):
         """Handle mouse clicks on the map to change cell states"""
         # get current model value
-        if self.box_select_mode and event.button() == Qt.LeftButton:  # use the left mouse button in selection mode
+        if self.box_select_mode or self.line_select_mode and event.button() == Qt.LeftButton:  # use the left mouse button in selection mode
            self.rect_selecting = True
         x = math.floor(event.scenePos().x() / self.pixels_per_cell)
         y = math.floor(event.scenePos().y() / self.pixels_per_cell)
@@ -325,6 +345,8 @@ class MapEditor(QtWidgets.QMainWindow):
     def toggleBoxSelect(self, state):
         """switch to rectangle selection mode"""
         self.box_select_mode = (state == Qt.Checked)
+        if self.box_select_mode and self.ui.lineSelectCheck.isChecked():
+            self.ui.lineSelectCheck.setChecked(False)
 
     def updateSelectionRect(self):
         """update the selection rectangle display"""
@@ -377,6 +399,76 @@ class MapEditor(QtWidgets.QMainWindow):
             
         self.im.putpixel((x, y), val)
         self.color_cell(x, y, self.value2color(val))
+
+    def toggleLineSelect(self, state):
+        """switch to straight line mode"""
+        self.line_select_mode = (state == Qt.Checked)
+        if self.line_select_mode and self.ui.boxSelectCheck.isChecked():
+            self.ui.boxSelectCheck.setChecked(False)
+
+    def updateLinePreview(self):
+        """real time update linear preview"""
+        if hasattr(self, 'line_preview'):
+            self.scene.removeItem(self.line_preview)
+        
+        # use the bresenham algorithm to calculate a straight line path
+        line_points = self.bresenham_line(self.start_pos[0], self.start_pos[1], 
+                                        self.end_pos[0], self.end_pos[1])
+        
+        # create preview path dashed line
+        path = QtGui.QPainterPath()
+        path.moveTo(self.start_pos[0] * self.pixels_per_cell, 
+                    self.start_pos[1] * self.pixels_per_cell)
+        path.lineTo(self.end_pos[0] * self.pixels_per_cell, 
+                self.end_pos[1] * self.pixels_per_cell)
+        
+        pen = QPen(Qt.blue, 1, Qt.DashLine)
+        self.line_preview = self.scene.addPath(path, pen)
+
+    def fillLineBetweenPoints(self):
+        """fill in the straight path between two points"""
+        points = self.bresenham_line(self.start_pos[0], self.start_pos[1],
+                                    self.end_pos[0], self.end_pos[1])
+        for x, y in points:
+            if 0 <= x < self.map_width_cells and 0 <= y < self.map_height_cells:
+                self.fillCell(x, y)
+
+    def clearLinePreview(self):
+        """clear straight line preview"""
+        if hasattr(self, 'line_preview'):
+            self.scene.removeItem(self.line_preview)
+            del self.line_preview
+
+    def bresenham_line(self, x0, y0, x1, y1):
+        """bresenham line algorithm"""
+        points = []
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        x, y = x0, y0
+        sx = -1 if x0 > x1 else 1
+        sy = -1 if y0 > y1 else 1
+        
+        if dx > dy:
+            err = dx / 2.0
+            while x != x1:
+                points.append((x, y))
+                err -= dy
+                if err < 0:
+                    y += sy
+                    err += dx
+                x += sx
+        else:
+            err = dy / 2.0
+            while y != y1:
+                points.append((x, y))
+                err -= dx
+                if err < 0:
+                    x += sx
+                    err += dy
+                y += sy
+                
+        points.append((x, y))
+        return points
 
     def closeEvent(self, event):
         self.close()
