@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 from ros_map_editor.ui_map_editor import Ui_MapEditor
+from ros_map_editor import __version__
 
 from PyQt5.QtGui import QPainter, QBrush, QPen
 from PyQt5.QtCore import Qt
@@ -426,12 +427,46 @@ class MapEditor(QtWidgets.QMainWindow):
         self.line_preview = self.scene.addPath(path, pen)
 
     def fillLineBetweenPoints(self):
-        """fill in the straight path between two points"""
+        """Fill in the straight path between two points and perpendicular adjacent cells"""
         points = self.bresenham_line(self.start_pos[0], self.start_pos[1],
                                     self.end_pos[0], self.end_pos[1])
-        for x, y in points:
-            if 0 <= x < self.map_width_cells and 0 <= y < self.map_height_cells:
-                self.fillCell(x, y)
+        
+        if len(points) > 1:
+            # Calculate the primary direction of the line
+            dx = abs(self.end_pos[0] - self.start_pos[0])
+            dy = abs(self.end_pos[1] - self.start_pos[1])
+            
+            for x, y in points:
+                # Fill the center cell
+                if 0 <= x < self.map_width_cells and 0 <= y < self.map_height_cells:
+                    self.fillCell(x, y)
+                
+                # For more horizontal lines (dx > dy), fill cells above and below
+                if dx > dy:
+                    for offset in [-1, 1]:
+                        adj_y = y + offset
+                        if 0 <= adj_y < self.map_height_cells:
+                            self.fillCell(x, adj_y)
+                
+                # For more vertical lines (dx <= dy), fill cells left and right
+                else:
+                    for offset in [-1, 1]:
+                        adj_x = x + offset
+                        if 0 <= adj_x < self.map_width_cells:
+                            self.fillCell(adj_x, y)
+        else:
+            # If it's just a single point, fill it and its adjacent cells
+            for x, y in points:
+                if 0 <= x < self.map_width_cells and 0 <= y < self.map_height_cells:
+                    self.fillCell(x, y)
+                    # Fill adjacent cells in both directions
+                    for offset in [-1, 1]:
+                        adj_x = x + offset
+                        if 0 <= adj_x < self.map_width_cells:
+                            self.fillCell(adj_x, y)
+                        adj_y = y + offset
+                        if 0 <= adj_y < self.map_height_cells:
+                            self.fillCell(x, adj_y)
 
     def clearLinePreview(self):
         """clear straight line preview"""

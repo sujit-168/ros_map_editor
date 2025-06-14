@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from ros_map_editor import __version__
 
 class Ui_MapEditor(object):
     def setupUi(self, MapEditor):
@@ -210,7 +211,7 @@ class Ui_MapEditor(object):
 
     def retranslateUi(self, MapEditor):
         _translate = QtCore.QCoreApplication.translate
-        MapEditor.setWindowTitle(_translate("MapEditor", "MainWindow"))
+        MapEditor.setWindowTitle(_translate("MapEditor", f"ROS Map Editor v{__version__}"))
         self.image_preview_group.setTitle(_translate("MapEditor", "Preview"))
         self.info_group.setTitle(_translate("MapEditor", "Image Information"))
         self.label_3.setText(_translate("MapEditor", "File"))

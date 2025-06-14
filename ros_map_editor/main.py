@@ -6,6 +6,7 @@ Main entry point for the ROS Map Editor application.
 import sys
 import argparse
 from ros_map_editor.map_editor import MapEditor
+from ros_map_editor import __version__
 from PyQt5 import QtWidgets
 
 
@@ -16,7 +17,7 @@ def main():
     print("Starting ROS Map Editor...")
     parser = argparse.ArgumentParser(description='ROS Map Editor - A GUI tool for editing ROS map files')
     parser.add_argument('map_file', help='Path to the map file (.pgm or without extension)')
-    parser.add_argument('--version', action='version', version='%(prog)s 0.1.0')
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     
     args = parser.parse_args()
     print(f"Opening map file: {args.map_file}")
