@@ -12,8 +12,13 @@ with open(os.path.join(cwd, "README.rst"), encoding="utf-8") as f:
 def get_packages_version():
     """Get the version of the packages"""
     with open(os.path.join(cwd, "ros_map_editor", "version.py")) as f:
-        exec(f.read())
-    return locals()["__version__"]
+        content = f.read()
+        import re
+        version = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", content, re.M)
+        if version:
+            return version.group(1)
+        raise RuntimeError("Unable to find __version__ string.")
+    return version
 
 # version
 version = get_packages_version()
