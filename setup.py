@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ros_map_editor",
-    version="0.1.0",
+    version="0.1.1",
     description="A GUI editor for ROS map files in PGM format",
     long_description=open("README.md").read() if hasattr(__file__, "read") else "",
     long_description_content_type="text/markdown",

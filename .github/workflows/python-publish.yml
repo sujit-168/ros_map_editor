@@ -9,6 +9,14 @@
 name: Upload Python Package
 
 on:
+  # Execute on push
+  push:
+    branches: [main]
+  # Execute on pr
+  pull_request:
+    branches: [main]
+  # Can be executed manually
+  workflow_dispatch:
   release:
     types: [published]
 
