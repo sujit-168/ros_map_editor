@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="ros-map-editor",
+    name="ros_map_editor",
     version="0.1.0",
     description="A GUI editor for ROS map files in PGM format",
     long_description=open("README.md").read() if hasattr(__file__, "read") else "",
@@ -18,7 +18,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "ros-map-editor=ros_map_editor.main:main",
+            "ros_map_editor=ros_map_editor.main:main",
         ],
     },
     classifiers=[
