@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 from ros_map_editor.ui_map_editor import Ui_MapEditor
+from ros_map_editor import __version__
 
 from PyQt5.QtGui import QPainter, QBrush, QPen
 from PyQt5.QtCore import Qt

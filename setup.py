@@ -1,10 +1,29 @@
+import os
+import sys
 from setuptools import setup, find_packages
+
+# Constant known variables used throughout this file
+cwd = os.path.dirname(os.path.abspath(__file__))
+
+# Read in README.md for our long_description
+with open(os.path.join(cwd, "README.rst"), encoding="utf-8") as f:
+    long_description = f.read()
+
+def get_packages_version():
+    """Get the version of the packages"""
+    with open(os.path.join(cwd, "ros_map_editor", "version.py")) as f:
+        exec(f.read())
+    return locals()["__version__"]
+
+# version
+version = get_packages_version()
+version_range_max = max(sys.version_info[1], 13) + 1
 
 setup(
     name="ros_map_editor",
-    version="0.1.1",
+    version=version,
     description="A GUI editor for ROS map files in PGM format",
-    long_description=open("README.md").read() if hasattr(__file__, "read") else "",
+    long_description=long_description,
     long_description_content_type="text/markdown",
     author="sujit-168",
     author_email="sujie@tianbot.com",
